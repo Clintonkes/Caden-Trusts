@@ -1,0 +1,11 @@
+fastapi[all]
+uvicorn[standard]
+sqlmodel
+asyncpg
+psycopg2-binary
+pydantic-settings
+python-dotenv
+alembic
+httpx
+pytest
+pytest-asyncio
