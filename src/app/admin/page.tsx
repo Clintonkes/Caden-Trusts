@@ -13,7 +13,7 @@ import {
   Activity
 } from 'lucide-react'
 import { DashboardLayout } from '@/components/dashboard/DashboardNav'
-import { mockUsers, useTransactionStore } from '@/store'
+import { mockUsers, useTransactionStore, Transaction, User } from '@/store'
 
 const stats = [
   { name: 'Total Users', value: '2,543', change: '+12%', icon: Users, color: 'bg-blue-500' },
@@ -36,7 +36,7 @@ export default function AdminDashboard() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((stat) => (
+          {stats.map((stat: any) => (
             <div key={stat.name} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-4">
                 <div className={`w-12 h-12 ${stat.color} rounded-xl flex items-center justify-center`}>
@@ -59,7 +59,7 @@ export default function AdminDashboard() {
             { name: 'Transactions', icon: CreditCard, href: '/admin/transactions', color: 'bg-green-500' },
             { name: 'Notifications', icon: Bell, href: '/admin/notifications', color: 'bg-orange-500' },
             { name: 'System Logs', icon: Activity, href: '/admin/logs', color: 'bg-purple-500' },
-          ].map((action) => (
+          ].map((action: any) => (
             <Link
               key={action.name}
               href={action.href}
@@ -92,7 +92,7 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {mockUsers.map((user) => (
+                {mockUsers.map((user: User) => (
                   <tr key={user.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 font-medium text-gray-900">{user.name}</td>
                     <td className="px-4 py-3 text-gray-600">{user.email}</td>
@@ -134,7 +134,7 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {transactions.slice(0, 5).map((transaction) => (
+                {transactions.slice(0, 5).map((transaction: Transaction) => (
                   <tr key={transaction.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 font-medium text-gray-900">{transaction.description}</td>
                     <td className="px-4 py-3 text-gray-600 capitalize">{transaction.type}</td>

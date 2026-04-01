@@ -13,7 +13,7 @@ import {
     Plus
 } from 'lucide-react'
 import { DashboardLayout } from '@/components/dashboard/DashboardNav'
-import { useAuthStore, useTransactionStore } from '@/store'
+import { useAuthStore, useTransactionStore, Transaction } from '@/store'
 
 export default function DashboardPage() {
     const { user } = useAuthStore()
@@ -129,7 +129,7 @@ export default function DashboardPage() {
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                     <h2 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h2>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        {quickActions.map((action) => (
+                        {quickActions.map((action: any) => (
                             <Link
                                 key={action.name}
                                 href={action.href}
@@ -153,7 +153,7 @@ export default function DashboardPage() {
                         </Link>
                     </div>
                     <div className="space-y-4">
-                        {recentTransactions.map((transaction) => (
+                        {recentTransactions.map((transaction: Transaction) => (
                             <div key={transaction.id} className="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 transition-colors">
                                 <div className="flex items-center gap-4">
                                     <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
