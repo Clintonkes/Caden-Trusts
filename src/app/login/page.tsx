@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Mail, Lock, Eye, EyeOff, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { useAuthStore, mockUsers } from '@/store'
+import { useAuthStore, mockUsers, AuthState, User } from '@/store'
 
 export default function LoginPage() {
   const router = useRouter()
