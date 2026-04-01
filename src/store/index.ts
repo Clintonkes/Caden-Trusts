@@ -49,7 +49,7 @@ export interface Toast {
 }
 
 // Auth Store
-export const useAuthStore = create<AuthState>((set: any) => ({
+export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
   login: (user: User) => set({ user, isAuthenticated: true }),
@@ -61,7 +61,7 @@ export const useAuthStore = create<AuthState>((set: any) => ({
 }))
 
 // Transaction Store
-export const useTransactionStore = create<TransactionState>((set: any) => ({
+export const useTransactionStore = create<TransactionState>((set, get) => ({
   transactions: [
     {
       id: '1',
@@ -109,11 +109,11 @@ export const useTransactionStore = create<TransactionState>((set: any) => ({
     set((state: TransactionState) => ({
       transactions: [transaction, ...state.transactions],
     })),
-  getTransactions: () => useTransactionStore.getState().transactions,
+  getTransactions: () => get().transactions,
 }))
 
 // UI Store
-export const useUIStore = create<UIState>((set: any) => ({
+export const useUIStore = create<UIState>((set) => ({
   isLoading: false,
   setLoading: (loading: boolean) => set({ isLoading: loading }),
   toasts: [],
