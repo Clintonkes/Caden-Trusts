@@ -29,7 +29,7 @@ export default function CardsPage() {
 
         {/* Cards Grid */}
         <div className="grid md:grid-cols-2 gap-6">
-          {cards.map((card) => (
+          {cards.map((card: any) => (
             <div
               key={card.id}
               className="relative bg-gradient-to-br from-primary to-primary-700 rounded-2xl p-6 text-white shadow-lg"

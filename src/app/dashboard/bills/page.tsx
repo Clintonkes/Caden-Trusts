@@ -56,7 +56,7 @@ export default function BillsPage() {
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <h2 className="text-lg font-bold text-gray-900 mb-4">Select Biller</h2>
             <div className="space-y-3">
-              {billers.map((biller) => (
+              {billers.map((biller: any) => (
                 <button
                   key={biller.id}
                   onClick={() => setSelectedBiller(biller.name)}

@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import { TrendingUp, TrendingDown, Send, Receipt, Filter, Download } from 'lucide-react'
 import { DashboardLayout } from '@/components/dashboard/DashboardNav'
-import { useTransactionStore } from '@/store'
+import { useTransactionStore, Transaction } from '@/store'
 
 export default function TransactionsPage() {
   const { transactions } = useTransactionStore()
@@ -11,7 +11,7 @@ export default function TransactionsPage() {
 
   const filteredTransactions = filter === 'all' 
     ? transactions 
-    : transactions.filter(t => t.type === filter)
+    : transactions.filter((t: Transaction) => t.type === filter)
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -64,7 +64,7 @@ export default function TransactionsPage() {
 
         {/* Filters */}
         <div className="flex flex-wrap gap-2">
-          {['all', 'deposit', 'withdrawal', 'transfer', 'bill'].map((type) => (
+          {['all', 'deposit', 'withdrawal', 'transfer', 'bill'].map((type: string) => (
             <button
               key={type}
               onClick={() => setFilter(type)}
@@ -93,7 +93,7 @@ export default function TransactionsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filteredTransactions.map((transaction) => (
+                {filteredTransactions.map((transaction: Transaction) => (
                   <tr key={transaction.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
