@@ -9,3 +9,4 @@ alembic
 httpx
 pytest
 pytest-asyncio
+aiofiles

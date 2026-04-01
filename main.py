@@ -1,5 +1,7 @@
 import os
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from sqlmodel import SQLModel, create_engine, Session, select
 from typing import Optional
 from dotenv import load_dotenv
@@ -27,10 +29,18 @@ app = FastAPI(title="Caden Trusts API")
 def on_startup():
     create_db_and_tables()
 
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to Caden Trusts API", "status": "online"}
-
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
+
+# Serve static files from the 'out' directory (where Next.js exports)
+# Check if the directory exists first to avoid errors during initial local dev without build
+if os.path.exists("out"):
+    app.mount("/", StaticFiles(directory="out", html=True), name="static")
+
+@app.exception_handler(404)
+async def not_found_exception_handler(request, exc):
+    # Ensure index.html exists before trying to serve it
+    if os.path.exists("out/index.html"):
+        return FileResponse("out/index.html")
+    return {"error": "Not Found", "message": "The requested resource was not found."}
