@@ -10,7 +10,7 @@ import { useAuthStore, mockUsers } from '@/store'
 
 export default function LoginPage() {
   const router = useRouter()
-  const login = useAuthStore((state) => state.login)
+  const login = useAuthStore((state: AuthState) => state.login)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -25,7 +25,7 @@ export default function LoginPage() {
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1500))
 
-    const user = mockUsers.find((u) => u.email === email)
+    const user = mockUsers.find((u: User) => u.email === email)
     
     if (!user || password.length < 6) {
       setError('Invalid email or password')

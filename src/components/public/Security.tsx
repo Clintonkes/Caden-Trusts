@@ -50,7 +50,7 @@ export function Security() {
                 </div>
 
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {securityFeatures.map((feature, index) => (
+                    {securityFeatures.map((feature: any, index: number) => (
                         <div
                             key={index}
                             className="flex gap-4 p-6 rounded-2xl bg-gray-50 hover:bg-primary-50 transition-colors duration-300"

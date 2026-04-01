@@ -122,7 +122,7 @@ export default function OTPPage() {
                         )}
 
                         <div className="flex justify-center gap-2 mb-8" onPaste={handlePaste}>
-                            {otp.map((digit, index) => (
+                            {otp.map((digit: string, index: number) => (
                                 <input
                                     key={index}
                                     ref={(el: HTMLInputElement | null) => { inputRefs.current[index] = el }}

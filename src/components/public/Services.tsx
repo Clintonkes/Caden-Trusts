@@ -56,7 +56,7 @@ export function Services() {
                 </div>
 
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {services.map((service, index) => (
+                    {services.map((service: any, index: number) => (
                         <div
                             key={index}
                             className="service-card bg-white rounded-2xl p-8 border border-gray-100 shadow-sm hover:shadow-xl cursor-pointer"
