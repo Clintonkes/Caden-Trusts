@@ -63,7 +63,7 @@ export function DashboardLayout({ children }: DashboardNavProps) {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-1">
-              {navItems.map((item) => (
+              {navItems.map((item: any) => (
                 <Link
                   key={item.name}
                   href={item.href}
@@ -145,7 +145,7 @@ export function DashboardLayout({ children }: DashboardNavProps) {
         {isMobileMenuOpen && (
           <div className="md:hidden bg-white border-t border-gray-100">
             <div className="px-4 py-2 space-y-1">
-              {navItems.map((item) => (
+              {navItems.map((item: any) => (
                 <Link
                   key={item.name}
                   href={item.href}
