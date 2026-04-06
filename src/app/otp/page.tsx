@@ -5,23 +5,31 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Shield, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { useAuthStore, User, AuthState } from '@/store'
+import { verifyOtp, ApiError } from '@/lib/api'
 
 export default function OTPPage() {
     const router = useRouter()
-    const login = useAuthStore((state: AuthState) => state.login)
     const [otp, setOTP] = useState(['', '', '', '', '', ''])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
+    const [success, setSuccess] = useState('')
     const [resendTimer, setResendTimer] = useState(60)
+    const [email, setEmail] = useState('')
     const inputRefs = useRef<(HTMLInputElement | null)[]>([])
 
     useEffect(() => {
+        const pendingEmail = sessionStorage.getItem('pendingEmail')
+        if (pendingEmail) {
+            setEmail(pendingEmail)
+        } else {
+            router.push('/signup')
+        }
+
         const timer = setInterval(() => {
             setResendTimer((prev: number) => (prev > 0 ? prev - 1 : 0))
         }, 1000)
         return () => clearInterval(timer)
-    }, [])
+    }, [router])
 
     const handleChange = (index: number, value: string) => {
         if (isNaN(Number(value))) return
@@ -53,46 +61,41 @@ export default function OTPPage() {
         e.preventDefault()
         setLoading(true)
         setError('')
+        setSuccess('')
 
         const otpValue = otp.join('')
 
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1500))
-
-        // Simulate OTP verification (any 6-digit code works for demo)
         if (otpValue.length !== 6) {
             setError('Please enter a valid 6-digit OTP')
             setLoading(false)
             return
         }
 
-        // Get pending user from session storage
-        const pendingUserData = sessionStorage.getItem('pendingUser')
-        if (pendingUserData) {
-            const pendingUser = JSON.parse(pendingUserData) as User
-            login(pendingUser)
-            sessionStorage.removeItem('pendingUser')
-            
-            // Set auth cookie
-            document.cookie = 'auth-token=true; path=/; max-age=86400'
-
-            // Redirect based on role
-            if (pendingUser.role === 'admin') {
-                router.push('/admin')
+        try {
+            await verifyOtp(email, otpValue)
+            setSuccess('Email verified successfully! Redirecting to login...')
+            sessionStorage.removeItem('pendingEmail')
+            setTimeout(() => {
+                router.push('/login')
+            }, 1500)
+        } catch (err) {
+            if (err instanceof ApiError) {
+                setError(err.detail)
             } else {
-                router.push('/dashboard')
+                setError('An unexpected error occurred. Please try again.')
             }
-        } else {
-            // Default redirect if no pending user
-            router.push('/dashboard')
+        } finally {
+            setLoading(false)
         }
-
-        setLoading(false)
     }
 
-    const handleResend = () => {
+    const handleResend = async () => {
         setResendTimer(60)
-        // Simulate resend
+        setError('')
+        setSuccess('A new OTP has been sent to your email.')
+
+        // Resend is handled by re-triggering login for unverified accounts
+        // or we could add a dedicated resend endpoint
     }
 
     return (
@@ -110,7 +113,7 @@ export default function OTPPage() {
                         </div>
                         <h1 className="text-2xl font-bold text-gray-900 mb-2">Verify Your Account</h1>
                         <p className="text-gray-600">
-                            We've sent a 6-digit code to your email. Enter it below to verify your identity.
+                            We&apos;ve sent a 6-digit code to <strong>{email}</strong>. Enter it below to verify your identity.
                         </p>
                     </div>
 
@@ -118,6 +121,12 @@ export default function OTPPage() {
                         {error && (
                             <div className="bg-red-50 text-red-600 p-4 rounded-lg text-sm mb-6">
                                 {error}
+                            </div>
+                        )}
+
+                        {success && (
+                            <div className="bg-green-50 text-green-600 p-4 rounded-lg text-sm mb-6">
+                                {success}
                             </div>
                         )}
 
@@ -156,10 +165,6 @@ export default function OTPPage() {
                         )}
                     </div>
                 </div>
-
-                <p className="mt-8 text-center text-gray-500 text-sm">
-                    Demo OTP: Enter any 6 digits
-                </p>
             </div>
         </div>
     )

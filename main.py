@@ -1,46 +1,32 @@
-import os
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-from sqlmodel import SQLModel, create_engine, Session, select
-from typing import Optional
-from dotenv import load_dotenv
+from contextlib import asynccontextmanager
+import os
 
-# Load environment variables
-load_dotenv()
+from database.connection import create_db_and_tables, engine
+from database.models import User, UserRole
+from auth_utils import get_password_hash, generate_account_number, seed_admin
+from api.auth import router as auth_router
+from api.transactions import router as transactions_router
 
-# Database setup
-DATABASE_URL = os.getenv("DATABASE_URL")
-if not DATABASE_URL:
-    # Default to a local sqlite (good for local dev if not configured)
-    DATABASE_URL = "sqlite:///./test.db"
 
-# Replace postgres:// with postgresql:// for asyncpg/psycopg2 compatibility if needed
-DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://")
-
-engine = create_engine(DATABASE_URL)
-
-def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
-
-app = FastAPI(title="Caden Trusts API")
-
-@app.on_event("startup")
-def on_startup():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     create_db_and_tables()
+    seed_admin()
+    yield
+
+
+app = FastAPI(title="Caden Trusts API", lifespan=lifespan)
+
+app.include_router(auth_router)
+app.include_router(transactions_router)
+
 
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
 
-# Serve static files from the 'out' directory (where Next.js exports)
-# Check if the directory exists first to avoid errors during initial local dev without build
-if os.path.exists("out"):
-    app.mount("/", StaticFiles(directory="out", html=True), name="static")
 
-@app.exception_handler(404)
-async def not_found_exception_handler(request, exc):
-    # Ensure index.html exists before trying to serve it
-    if os.path.exists("out/index.html"):
-        return FileResponse("out/index.html")
-    return {"error": "Not Found", "message": "The requested resource was not found."}
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

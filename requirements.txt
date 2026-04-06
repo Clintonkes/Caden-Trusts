@@ -10,3 +10,8 @@ httpx
 pytest
 pytest-asyncio
 aiofiles
+passlib[bcrypt]
+pyjwt
+fastapi-mail
+python-multipart
+bcrypt==4.0.1

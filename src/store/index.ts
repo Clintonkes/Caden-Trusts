@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { tokenManager, User } from '@/lib/token'
 
 export interface User {
   id: string
@@ -26,6 +27,7 @@ export interface AuthState {
   login: (user: User) => void
   logout: () => void
   updateUser: (user: Partial<User>) => void
+  checkAuth: () => void
 }
 
 export interface TransactionState {
@@ -52,12 +54,26 @@ export interface Toast {
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
-  login: (user: User) => set({ user, isAuthenticated: true }),
-  logout: () => set({ user: null, isAuthenticated: false }),
+  login: (user: User) => {
+    tokenManager.setToken(user.id)
+    tokenManager.setUser(user as any)
+    set({ user, isAuthenticated: true })
+  },
+  logout: () => {
+    tokenManager.clear()
+    set({ user: null, isAuthenticated: false })
+  },
   updateUser: (userData: Partial<User>) =>
     set((state: AuthState) => ({
       user: state.user ? { ...state.user, ...userData } : null,
     })),
+  checkAuth: () => {
+    const token = tokenManager.getToken()
+    const user = tokenManager.getUser()
+    if (token && user) {
+      set({ user: user as User, isAuthenticated: true })
+    }
+  },
 }))
 
 // Transaction Store

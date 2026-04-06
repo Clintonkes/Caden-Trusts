@@ -6,11 +6,13 @@ import { useRouter } from 'next/navigation'
 import { Mail, Lock, Eye, EyeOff, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { useAuthStore, mockUsers, AuthState, User } from '@/store'
+import { useAuthStore, useUIStore, AuthState, UIState } from '@/store'
+import { loginUser, ApiError, tokenManager } from '@/lib/token'
 
 export default function LoginPage() {
   const router = useRouter()
   const login = useAuthStore((state: AuthState) => state.login)
+  const addToast = useUIStore((state: UIState) => state.addToast)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -22,21 +24,63 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+    try {
+      const response = await loginUser(email, password)
 
-    const user = mockUsers.find((u: User) => u.email === email)
-    
-    if (!user || password.length < 6) {
-      setError('Invalid email or password')
+      tokenManager.setToken(response.token!)
+      tokenManager.setUser(response.user!)
+
+      login({
+        id: String(response.user!.id),
+        name: response.user!.name,
+        email: response.user!.email,
+        role: response.user!.role,
+        accountNumber: response.user!.accountNumber,
+        balance: response.user!.balance,
+        isActive: true,
+      })
+
+      addToast({
+        id: Date.now().toString(),
+        message: 'Login successful!',
+        type: 'success',
+      })
+
+      if (response.user!.role === 'admin') {
+        router.push('/admin')
+      } else {
+        router.push('/dashboard')
+      }
+    } catch (err) {
+      if (err instanceof ApiError) {
+        if (err.status === 403) {
+          sessionStorage.setItem('pendingEmail', email)
+          addToast({
+            id: Date.now().toString(),
+            message: err.detail,
+            type: 'warning',
+          })
+          router.push('/otp')
+          return
+        }
+        setError(err.detail)
+        addToast({
+          id: Date.now().toString(),
+          message: err.detail,
+          type: 'error',
+        })
+      } else {
+        const msg = 'An unexpected error occurred. Please try again.'
+        setError(msg)
+        addToast({
+          id: Date.now().toString(),
+          message: msg,
+          type: 'error',
+        })
+      }
+    } finally {
       setLoading(false)
-      return
     }
-
-    // Store pending user and redirect to OTP
-    sessionStorage.setItem('pendingUser', JSON.stringify(user))
-    router.push('/otp')
-    setLoading(false)
   }
 
   return (
@@ -44,7 +88,7 @@ export default function LoginPage() {
       {/* Left Side - Form */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
-          <div className="mb-8">
+          <div className="mb-8 animate-fade-in">
             <Link href="/" className="flex items-center gap-2 mb-8">
               <Shield className="w-8 h-8 text-primary" />
               <span className="text-xl font-bold text-primary">Caden Trusts</span>
@@ -53,9 +97,9 @@ export default function LoginPage() {
             <p className="text-gray-600">Sign in to access your account</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
             {error && (
-              <div className="bg-red-50 text-red-600 p-4 rounded-lg text-sm">
+              <div className="bg-red-50 text-red-600 p-4 rounded-lg text-sm animate-shake">
                 {error}
               </div>
             )}
@@ -105,7 +149,7 @@ export default function LoginPage() {
           </form>
 
           <p className="mt-8 text-center text-gray-600">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link href="/signup" className="text-primary font-medium hover:underline">
               Sign up
             </Link>
@@ -114,26 +158,34 @@ export default function LoginPage() {
       </div>
 
       {/* Right Side - Visual */}
-      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-primary to-primary-700 items-center justify-center p-12">
-        <div className="max-w-lg text-white">
+      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-primary to-primary-700 items-center justify-center p-12 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <img 
+            src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&q=80" 
+            alt="Banking" 
+            className="w-full h-full object-cover"
+          />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/80 to-primary-700/80"></div>
+        <div className="max-w-lg text-white animate-fade-in relative z-10">
           <h2 className="text-4xl font-bold mb-6">Secure Banking Experience</h2>
           <p className="text-lg opacity-90 mb-8">
             Access your accounts securely with our advanced encryption and two-factor authentication.
           </p>
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white/10 backdrop-blur rounded-xl p-4">
+            <div className="bg-white/10 backdrop-blur rounded-xl p-4 animate-slide-up" style={{ animationDelay: '0.1s' }}>
               <p className="text-3xl font-bold">256-bit</p>
               <p className="text-sm opacity-80">SSL Encryption</p>
             </div>
-            <div className="bg-white/10 backdrop-blur rounded-xl p-4">
+            <div className="bg-white/10 backdrop-blur rounded-xl p-4 animate-slide-up" style={{ animationDelay: '0.2s' }}>
               <p className="text-3xl font-bold">24/7</p>
               <p className="text-sm opacity-80">Fraud Monitoring</p>
             </div>
-            <div className="bg-white/10 backdrop-blur rounded-xl p-4">
+            <div className="bg-white/10 backdrop-blur rounded-xl p-4 animate-slide-up" style={{ animationDelay: '0.3s' }}>
               <p className="text-3xl font-bold">$0</p>
               <p className="text-sm opacity-80">Liability Coverage</p>
             </div>
-            <div className="bg-white/10 backdrop-blur rounded-xl p-4">
+            <div className="bg-white/10 backdrop-blur rounded-xl p-4 animate-slide-up" style={{ animationDelay: '0.4s' }}>
               <p className="text-3xl font-bold">Instant</p>
               <p className="text-sm opacity-80">Alerts</p>
             </div>

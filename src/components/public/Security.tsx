@@ -53,10 +53,11 @@ export function Security() {
                     {securityFeatures.map((feature: any, index: number) => (
                         <div
                             key={index}
-                            className="flex gap-4 p-6 rounded-2xl bg-gray-50 hover:bg-primary-50 transition-colors duration-300"
+                            className="flex gap-4 p-6 rounded-2xl bg-gray-50 hover:bg-primary-50 transition-colors duration-300 hover:-translate-y-1 animate-fade-in"
+                            style={{ animationDelay: `${index * 0.1}s` }}
                         >
                             <div className="flex-shrink-0">
-                                <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center">
+                                <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center animate-scale-in" style={{ animationDelay: `${index * 0.1 + 0.2}s` }}>
                                     <feature.icon className="w-6 h-6 text-white" />
                                 </div>
                             </div>

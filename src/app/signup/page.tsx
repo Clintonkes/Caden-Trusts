@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Mail, Lock, User, Eye, EyeOff, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { registerUser, ApiError } from '@/lib/token'
 
 export default function SignupPage() {
     const router = useRouter()
@@ -40,25 +41,40 @@ export default function SignupPage() {
             return
         }
 
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1500))
-
-        // Store user data and redirect to login
-        router.push('/login')
-        setLoading(false)
+        try {
+            await registerUser(formData.name, formData.email, formData.password)
+            sessionStorage.setItem('pendingEmail', formData.email)
+            router.push('/otp')
+        } catch (err) {
+            if (err instanceof ApiError) {
+                setError(err.detail)
+            } else {
+                setError('An unexpected error occurred. Please try again.')
+            }
+        } finally {
+            setLoading(false)
+        }
     }
 
     return (
         <div className="min-h-screen flex">
             {/* Left Side - Visual */}
-            <div className="hidden lg:flex flex-1 bg-gradient-to-br from-primary to-primary-700 items-center justify-center p-12">
-                <div className="max-w-lg text-white">
+            <div className="hidden lg:flex flex-1 bg-gradient-to-br from-primary to-primary-700 items-center justify-center p-12 relative overflow-hidden">
+                <div className="absolute inset-0 opacity-20">
+                    <img 
+                        src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&q=80" 
+                        alt="Banking" 
+                        className="w-full h-full object-cover"
+                    />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/80 to-primary-700/80"></div>
+                <div className="max-w-lg text-white animate-fade-in relative z-10">
                     <h2 className="text-4xl font-bold mb-6">Join Caden Trusts</h2>
                     <p className="text-lg opacity-90 mb-8">
                         Start your journey to financial freedom with our secure and innovative banking platform.
                     </p>
                     <div className="space-y-4">
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-4 animate-slide-up" style={{ animationDelay: '0.1s' }}>
                             <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center">
                                 <Shield className="w-6 h-6" />
                             </div>
@@ -67,7 +83,7 @@ export default function SignupPage() {
                                 <p className="text-sm opacity-80">Your data is protected</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-4 animate-slide-up" style={{ animationDelay: '0.2s' }}>
                             <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center">
                                 <User className="w-6 h-6" />
                             </div>
@@ -83,7 +99,7 @@ export default function SignupPage() {
             {/* Right Side - Form */}
             <div className="flex-1 flex items-center justify-center p-8">
                 <div className="w-full max-w-md">
-                    <div className="mb-8">
+                    <div className="mb-8 animate-fade-in">
                         <Link href="/" className="flex items-center gap-2 mb-8">
                             <Shield className="w-8 h-8 text-primary" />
                             <span className="text-xl font-bold text-primary">Caden Trusts</span>
@@ -92,9 +108,9 @@ export default function SignupPage() {
                         <p className="text-gray-600">Enter your details to get started</p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-5">
+                    <form onSubmit={handleSubmit} className="space-y-5 animate-slide-up" style={{ animationDelay: '0.1s' }}>
                         {error && (
-                            <div className="bg-red-50 text-red-600 p-4 rounded-lg text-sm">
+                            <div className="bg-red-50 text-red-600 p-4 rounded-lg text-sm animate-shake">
                                 {error}
                             </div>
                         )}

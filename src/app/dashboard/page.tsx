@@ -76,13 +76,13 @@ export default function DashboardPage() {
                 {/* Balance Cards */}
                 <div className="grid md:grid-cols-3 gap-6">
                     {/* Main Balance Card */}
-                    <div className="md:col-span-2 bg-gradient-to-br from-primary to-primary-700 rounded-2xl p-6 text-white">
+                    <div className="md:col-span-2 bg-gradient-to-br from-primary to-primary-700 rounded-2xl p-6 text-white animate-fade-in">
                         <div className="flex justify-between items-start mb-8">
                             <div>
                                 <p className="text-white/80 text-sm">Total Balance</p>
                                 <p className="text-4xl font-bold mt-1">{formatCurrency(balance)}</p>
                             </div>
-                            <CreditCard className="w-10 h-10 opacity-80" />
+                            <CreditCard className="w-10 h-10 opacity-80 animate-float" />
                         </div>
                         <div className="flex justify-between items-end">
                             <div>
@@ -98,7 +98,7 @@ export default function DashboardPage() {
 
                     {/* Income/Expense Summary */}
                     <div className="space-y-4">
-                        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+                        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 animate-slide-up" style={{ animationDelay: '0.1s' }}>
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-gray-500 text-sm">Income</p>
@@ -110,7 +110,7 @@ export default function DashboardPage() {
                             </div>
                             <p className="text-xs text-green-600 mt-2">+12% from last month</p>
                         </div>
-                        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+                        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 animate-slide-up" style={{ animationDelay: '0.2s' }}>
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-gray-500 text-sm">Expenses</p>
@@ -126,16 +126,16 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Quick Actions */}
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 animate-fade-in">
                     <h2 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h2>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        {quickActions.map((action: any) => (
+                        {quickActions.map((action: any, index: number) => (
                             <Link
                                 key={action.name}
                                 href={action.href}
-                                className="flex flex-col items-center gap-3 p-4 rounded-xl hover:bg-gray-50 transition-colors"
+                                className="flex flex-col items-center gap-3 p-4 rounded-xl hover:bg-gray-50 transition-all duration-300 hover:-translate-y-1"
                             >
-                                <div className={`w-12 h-12 ${action.color} rounded-xl flex items-center justify-center`}>
+                                <div className={`w-12 h-12 ${action.color} rounded-xl flex items-center justify-center animate-scale-in`} style={{ animationDelay: `${index * 0.1}s` }}>
                                     <action.icon className="w-6 h-6 text-white" />
                                 </div>
                                 <span className="text-sm font-medium text-gray-700">{action.name}</span>
@@ -145,7 +145,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Recent Transactions */}
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 animate-slide-up" style={{ animationDelay: '0.1s' }}>
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-lg font-bold text-gray-900">Recent Transactions</h2>
                         <Link href="/dashboard/transactions" className="text-primary text-sm font-medium flex items-center gap-1 hover:underline">
