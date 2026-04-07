@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { tokenManager, User } from '@/lib/token'
+import { tokenManager } from '@/lib/token'
 
 export interface User {
   id: string

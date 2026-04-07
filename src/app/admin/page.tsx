@@ -13,7 +13,7 @@ import {
   Activity
 } from 'lucide-react'
 import { DashboardLayout } from '@/components/dashboard/DashboardNav'
-import { mockUsers, useTransactionStore, Transaction, User } from '@/store'
+import { mockUsers, useTransactionStore, Transaction } from '@/store'
 
 const stats = [
   { name: 'Total Users', value: '2,543', change: '+12%', icon: Users, color: 'bg-blue-500' },
@@ -92,7 +92,7 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {mockUsers.map((user: User) => (
+                {mockUsers.map((user) => (
                   <tr key={user.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 font-medium text-gray-900">{user.name}</td>
                     <td className="px-4 py-3 text-gray-600">{user.email}</td>
