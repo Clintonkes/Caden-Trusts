@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Shield, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { verifyOtp, ApiError } from '@/lib/api'
+import { verifyOtp, ApiError, resendOtp } from '@/lib/token'
 
 export default function OTPPage() {
     const router = useRouter()
@@ -92,10 +92,17 @@ export default function OTPPage() {
     const handleResend = async () => {
         setResendTimer(60)
         setError('')
-        setSuccess('A new OTP has been sent to your email.')
-
-        // Resend is handled by re-triggering login for unverified accounts
-        // or we could add a dedicated resend endpoint
+        
+        try {
+            await resendOtp(email)
+            setSuccess('A new OTP has been sent to your email.')
+        } catch (err) {
+            if (err instanceof ApiError) {
+                setError(err.detail)
+            } else {
+                setError('Failed to resend OTP. Please try again.')
+            }
+        }
     }
 
     return (
