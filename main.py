@@ -1,12 +1,16 @@
-from fastapi import FastAPI
 from contextlib import asynccontextmanager
-import os
+from pathlib import Path
 
-from database.connection import create_db_and_tables, engine
-from database.models import User, UserRole
-from auth_utils import get_password_hash, generate_account_number, seed_admin
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+
 from api.auth import router as auth_router
 from api.transactions import router as transactions_router
+from auth_utils import seed_admin
+from database.connection import create_db_and_tables
+
+BASE_DIR = Path(__file__).resolve().parent
+FRONTEND_DIR = BASE_DIR / "out"
 
 
 @asynccontextmanager
@@ -27,6 +31,11 @@ def health_check():
     return {"status": "healthy"}
 
 
+if FRONTEND_DIR.exists():
+    app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
+
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
