@@ -50,6 +50,40 @@ def decode_token(token: str) -> dict:
         raise Exception("Invalid token")
 
 
+
+def seed_admin() -> None:
+    try:
+        from sqlmodel import Session, select
+        from database.connection import engine
+        from database.models import User, UserRole, UserStatus
+    except Exception as exc:
+        print(f"Failed to import admin seed dependencies: {exc}")
+        return
+
+    admin_email = os.getenv("ADMIN_EMAIL", "admin@caden.com")
+    admin_password = os.getenv("ADMIN_PASSWORD", "Admin123!")
+    admin_name = os.getenv("ADMIN_NAME", "Admin User")
+
+    try:
+        with Session(engine) as session:
+            existing_admin = session.exec(select(User).where(User.email == admin_email)).first()
+            if existing_admin:
+                return
+
+            admin_user = User(
+                email=admin_email,
+                name=admin_name,
+                hashed_password=get_password_hash(admin_password),
+                role=UserRole.ADMIN.value,
+                status=UserStatus.ACTIVE.value,
+                account_number=generate_account_number(),
+                balance=0.0,
+                created_at=datetime.utcnow().isoformat(),
+            )
+            session.add(admin_user)
+            session.commit()
+    except Exception as exc:
+        print(f"Failed to seed admin user: {exc}")
 async def send_otp_email(email: str, otp: str) -> bool:
     smtp_host = os.getenv("SMTP_HOST")
     smtp_port = int(os.getenv("SMTP_PORT", "587"))
@@ -94,3 +128,4 @@ async def send_otp_email(email: str, otp: str) -> bool:
     except Exception as e:
         print(f"Failed to send email: {e}")
         return False
+
