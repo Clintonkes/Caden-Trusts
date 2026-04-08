@@ -55,7 +55,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
   login: (user: User) => {
-    tokenManager.setToken(user.id)
     tokenManager.setUser(user as any)
     set({ user, isAuthenticated: true })
   },
@@ -71,7 +70,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     const token = tokenManager.getToken()
     const user = tokenManager.getUser()
     if (token && user) {
-      set({ user: user as User, isAuthenticated: true })
+      set({ user: { ...user, id: String(user.id) } as User, isAuthenticated: true })
     }
   },
 }))
@@ -171,3 +170,4 @@ export const mockUsers: User[] = [
     isActive: true,
   },
 ]
+
