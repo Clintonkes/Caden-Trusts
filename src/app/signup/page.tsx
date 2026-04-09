@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 import { Mail, Lock, User, Eye, EyeOff, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { registerUser, ApiError } from '@/lib/token'
+import { registerUser, resendOtp, ApiError } from '@/lib/token'
 
 export default function SignupPage() {
     const router = useRouter()
@@ -50,6 +50,11 @@ export default function SignupPage() {
             if (err instanceof ApiError) {
                 if (err.status === 400 && err.detail.toLowerCase().includes('already registered')) {
                     sessionStorage.setItem('pendingEmail', formData.email)
+                    try {
+                        await resendOtp(formData.email)
+                    } catch (resendErr) {
+                        console.error('Failed to resend OTP for existing user', resendErr)
+                    }
                     setError(err.detail)
                     router.push('/otp')
                     return
@@ -211,4 +216,5 @@ export default function SignupPage() {
     </ScrollReveal>
   )
 }
+
 
