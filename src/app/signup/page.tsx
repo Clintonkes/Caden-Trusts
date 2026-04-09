@@ -1,5 +1,6 @@
 'use client'
 
+import { ScrollReveal } from '@/components/ui/scroll-reveal'
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -47,6 +48,12 @@ export default function SignupPage() {
             router.push('/otp')
         } catch (err) {
             if (err instanceof ApiError) {
+                if (err.status === 400 && err.detail.toLowerCase().includes('already registered')) {
+                    sessionStorage.setItem('pendingEmail', formData.email)
+                    setError(err.detail)
+                    router.push('/otp')
+                    return
+                }
                 setError(err.detail)
             } else {
                 setError('An unexpected error occurred. Please try again.')
@@ -57,6 +64,7 @@ export default function SignupPage() {
     }
 
     return (
+    <ScrollReveal>
         <div className="min-h-screen flex">
             {/* Left Side - Visual */}
             <div className="hidden lg:flex flex-1 bg-gradient-to-br from-primary to-primary-700 items-center justify-center p-12 relative overflow-hidden">
@@ -200,5 +208,7 @@ export default function SignupPage() {
                 </div>
             </div>
         </div>
-    )
+    </ScrollReveal>
+  )
 }
+

@@ -1,5 +1,6 @@
 'use client'
 
+import { ScrollReveal } from '@/components/ui/scroll-reveal'
 import React, { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -28,7 +29,8 @@ export default function OTPPage() {
         const timer = setInterval(() => {
             setResendTimer((prev: number) => (prev > 0 ? prev - 1 : 0))
         }, 1000)
-        return () => clearInterval(timer)
+        return (
+    <ScrollReveal>) => clearInterval(timer)
     }, [router])
 
     const handleChange = (index: number, value: string) => {
@@ -106,6 +108,7 @@ export default function OTPPage() {
     }
 
     return (
+    <ScrollReveal>
         <div className="min-h-screen flex items-center justify-center p-8 bg-gray-50">
             <div className="w-full max-w-md">
                 <Link href="/login" className="flex items-center gap-2 text-gray-600 hover:text-primary mb-8">
@@ -174,5 +177,6 @@ export default function OTPPage() {
                 </div>
             </div>
         </div>
-    )
+    </ScrollReveal>
+  )
 }

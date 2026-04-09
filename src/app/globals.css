@@ -124,3 +124,26 @@ a {
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
 }
+
+/* Scroll reveal */
+.reveal {
+  opacity: 0;
+  transform: translate3d(var(--reveal-x, 0), var(--reveal-y, 16px), 0) scale(var(--reveal-scale, 1));
+  transition: transform 650ms ease, opacity 650ms ease;
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: transform, opacity;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+

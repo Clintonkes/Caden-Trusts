@@ -1,5 +1,6 @@
 'use client'
 
+import { ScrollReveal } from '@/components/ui/scroll-reveal'
 import React, { useState } from 'react'
 import { TrendingUp, TrendingDown, Send, Receipt, Filter, Download } from 'lucide-react'
 import { DashboardLayout } from '@/components/dashboard/DashboardNav'
@@ -49,6 +50,7 @@ export default function TransactionsPage() {
   }
 
   return (
+    <ScrollReveal>
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
@@ -123,5 +125,6 @@ export default function TransactionsPage() {
         </div>
       </div>
     </DashboardLayout>
+    </ScrollReveal>
   )
 }

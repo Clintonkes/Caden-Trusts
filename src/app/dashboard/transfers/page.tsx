@@ -1,5 +1,6 @@
 'use client'
 
+import { ScrollReveal } from '@/components/ui/scroll-reveal'
 import React, { useState } from 'react'
 import { Send, Building2, User, DollarSign, ArrowRight } from 'lucide-react'
 import { DashboardLayout } from '@/components/dashboard/DashboardNav'
@@ -61,6 +62,7 @@ export default function TransfersPage() {
   }
 
   return (
+    <ScrollReveal>
     <DashboardLayout>
       <div className="max-w-2xl mx-auto">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Send Money</h1>
@@ -155,5 +157,6 @@ export default function TransfersPage() {
         </div>
       </div>
     </DashboardLayout>
+    </ScrollReveal>
   )
 }

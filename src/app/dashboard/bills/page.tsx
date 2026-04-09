@@ -1,5 +1,6 @@
 'use client'
 
+import { ScrollReveal } from '@/components/ui/scroll-reveal'
 import React, { useState } from 'react'
 import { Receipt, Zap, Wifi, Phone, Home, Car, CheckCircle } from 'lucide-react'
 import { DashboardLayout } from '@/components/dashboard/DashboardNav'
@@ -37,6 +38,7 @@ export default function BillsPage() {
   }
 
   return (
+    <ScrollReveal>
     <DashboardLayout>
       <div className="space-y-6">
         <div>
@@ -131,5 +133,6 @@ export default function BillsPage() {
         </div>
       </div>
     </DashboardLayout>
+    </ScrollReveal>
   )
 }

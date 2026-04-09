@@ -1,5 +1,6 @@
 'use client'
 
+import { ScrollReveal } from '@/components/ui/scroll-reveal'
 import React from 'react'
 import Link from 'next/link'
 import {
@@ -52,6 +53,7 @@ export default function DashboardPage() {
     ]
 
     return (
+    <ScrollReveal>
         <DashboardLayout>
             <div className="space-y-8">
                 {/* Welcome Section */}
@@ -173,5 +175,6 @@ export default function DashboardPage() {
                 </div>
             </div>
         </DashboardLayout>
-    )
+    </ScrollReveal>
+  )
 }

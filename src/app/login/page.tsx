@@ -1,5 +1,6 @@
 'use client'
 
+import { ScrollReveal } from '@/components/ui/scroll-reveal'
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -84,6 +85,7 @@ export default function LoginPage() {
   }
 
   return (
+    <ScrollReveal>
     <div className="min-h-screen flex">
       {/* Left Side - Form */}
       <div className="flex-1 flex items-center justify-center p-8">
@@ -193,5 +195,6 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+    </ScrollReveal>
   )
 }

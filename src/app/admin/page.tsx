@@ -1,5 +1,6 @@
 'use client'
 
+import { ScrollReveal } from '@/components/ui/scroll-reveal'
 import React from 'react'
 import Link from 'next/link'
 import { 
@@ -26,6 +27,7 @@ export default function AdminDashboard() {
   const { transactions } = useTransactionStore()
 
   return (
+    <ScrollReveal>
     <DashboardLayout>
       <div className="space-y-8">
         {/* Welcome */}
@@ -156,5 +158,6 @@ export default function AdminDashboard() {
         </div>
       </div>
     </DashboardLayout>
+    </ScrollReveal>
   )
 }

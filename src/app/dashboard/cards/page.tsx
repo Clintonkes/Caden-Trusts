@@ -1,5 +1,6 @@
 'use client'
 
+import { ScrollReveal } from '@/components/ui/scroll-reveal'
 import React, { useState } from 'react'
 import { CreditCard, Plus, Eye, EyeOff, Power, PowerOff } from 'lucide-react'
 import { DashboardLayout } from '@/components/dashboard/DashboardNav'
@@ -14,6 +15,7 @@ export default function CardsPage() {
   const [showBalance, setShowBalance] = useState(true)
 
   return (
+    <ScrollReveal>
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
@@ -100,5 +102,6 @@ export default function CardsPage() {
         </div>
       </div>
     </DashboardLayout>
+    </ScrollReveal>
   )
 }
