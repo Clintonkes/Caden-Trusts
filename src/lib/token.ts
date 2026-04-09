@@ -1,4 +1,12 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL?.trim() || '';
+
+const buildApiUrl = (path: string): string => {
+  if (!API_URL) {
+    return path;
+  }
+
+  return `${API_URL.replace(/\/$/, '')}${path}`;
+};
 
 export interface User {
   id: number;
@@ -43,7 +51,8 @@ class TokenManager {
     if (!userData) return null;
     try {
       return JSON.parse(userData);
-    } catch {
+    } catch (error) {
+      console.error('Failed to parse stored user data', error);
       return null;
     }
   }
@@ -70,60 +79,68 @@ class TokenManager {
 
 export const tokenManager = new TokenManager();
 
+async function apiRequest(path: string, init: RequestInit): Promise<any> {
+  const url = buildApiUrl(path);
+
+  try {
+    const response = await fetch(url, init);
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('API request failed', {
+        url,
+        status: response.status,
+        detail: data?.detail,
+        body: init.body,
+      });
+      throw new ApiError(response.status, data.detail || 'Request failed');
+    }
+
+    return data;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+
+    console.error('Network request failed', {
+      url,
+      method: init.method || 'GET',
+      error,
+    });
+    throw new ApiError(0, 'Unable to reach the server. Please try again in a moment.');
+  }
+}
+
 export async function registerUser(name: string, email: string, password: string): Promise<AuthResponse> {
-  const response = await fetch(`${API_URL}/api/auth/register`, {
+  return apiRequest('/api/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, email, password }),
   });
-
-  const data = await response.json();
-  if (!response.ok) {
-    throw new ApiError(response.status, data.detail || 'Registration failed');
-  }
-  return data;
 }
 
 export async function verifyOtp(email: string, otp: string): Promise<AuthResponse> {
-  const response = await fetch(`${API_URL}/api/auth/verify-otp`, {
+  return apiRequest('/api/auth/verify-otp', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, otp }),
   });
-
-  const data = await response.json();
-  if (!response.ok) {
-    throw new ApiError(response.status, data.detail || 'OTP verification failed');
-  }
-  return data;
 }
 
 export async function resendOtp(email: string): Promise<AuthResponse> {
-  const response = await fetch(`${API_URL}/api/auth/resend-otp`, {
+  return apiRequest('/api/auth/resend-otp', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email }),
   });
-
-  const data = await response.json();
-  if (!response.ok) {
-    throw new ApiError(response.status, data.detail || 'Failed to resend OTP');
-  }
-  return data;
 }
 
 export async function loginUser(email: string, password: string): Promise<AuthResponse> {
-  const response = await fetch(`${API_URL}/api/auth/login`, {
+  return apiRequest('/api/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   });
-
-  const data = await response.json();
-  if (!response.ok) {
-    throw new ApiError(response.status, data.detail || 'Login failed');
-  }
-  return data;
 }
 
 export async function logoutUser(): Promise<void> {
