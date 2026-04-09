@@ -29,8 +29,7 @@ export default function OTPPage() {
         const timer = setInterval(() => {
             setResendTimer((prev: number) => (prev > 0 ? prev - 1 : 0))
         }, 1000)
-        return (
-    <ScrollReveal>) => clearInterval(timer)
+        return () => clearInterval(timer)
     }, [router])
 
     const handleChange = (index: number, value: string) => {
@@ -180,3 +179,4 @@ export default function OTPPage() {
     </ScrollReveal>
   )
 }
+
