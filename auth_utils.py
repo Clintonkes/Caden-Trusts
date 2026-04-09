@@ -1,3 +1,4 @@
+import logging
 import os
 import random
 import string
@@ -9,6 +10,8 @@ from passlib.context import CryptContext
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+logger = logging.getLogger(__name__)
 
 SECRET_KEY = os.getenv("JWT_SECRET", "your-jwt-secret-key-change-in-production")
 ALGORITHM = "HS256"
@@ -50,14 +53,13 @@ def decode_token(token: str) -> dict:
         raise Exception("Invalid token")
 
 
-
 def seed_admin() -> None:
     try:
         from sqlmodel import Session, select
         from database.connection import engine
         from database.models import User, UserRole, UserStatus
     except Exception as exc:
-        print(f"Failed to import admin seed dependencies: {exc}")
+        logger.exception("Failed to import admin seed dependencies: %s", exc)
         return
 
     admin_email = os.getenv("ADMIN_EMAIL", "admin@caden.com")
@@ -83,15 +85,20 @@ def seed_admin() -> None:
             session.add(admin_user)
             session.commit()
     except Exception as exc:
-        print(f"Failed to seed admin user: {exc}")
+        logger.exception("Failed to seed admin user: %s", exc)
+
+
 async def send_otp_email(email: str, otp: str) -> bool:
     smtp_host = os.getenv("SMTP_HOST")
-    smtp_port = int(os.getenv("SMTP_PORT", "587"))
     smtp_user = os.getenv("SMTP_USER")
     smtp_password = os.getenv("SMTP_PASSWORD")
+    smtp_starttls = os.getenv("SMTP_STARTTLS", "true").strip().lower() in {"1", "true", "yes", "on"}
+    smtp_ssl_tls = os.getenv("SMTP_SSL_TLS", "false").strip().lower() in {"1", "true", "yes", "on"}
+    smtp_port_env = os.getenv("SMTP_PORT")
+    smtp_port = int(smtp_port_env) if smtp_port_env else (465 if smtp_ssl_tls else 587)
 
     if not all([smtp_host, smtp_user, smtp_password]):
-        print(f"[DEV MODE] OTP for {email}: {otp}")
+        logger.info("[DEV MODE] OTP for %s: %s", email, otp)
         return True
 
     conf = ConnectionConfig(
@@ -100,8 +107,8 @@ async def send_otp_email(email: str, otp: str) -> bool:
         MAIL_FROM=smtp_user,
         MAIL_PORT=smtp_port,
         MAIL_SERVER=smtp_host,
-        MAIL_STARTTLS=True,
-        MAIL_SSL_TLS=False,
+        MAIL_STARTTLS=smtp_starttls,
+        MAIL_SSL_TLS=smtp_ssl_tls,
         USE_CREDENTIALS=True,
     )
 
@@ -126,6 +133,11 @@ async def send_otp_email(email: str, otp: str) -> bool:
         await fm.send_message(message)
         return True
     except Exception as e:
-        print(f"Failed to send email: {e}")
+        logger.exception(
+            "Failed to send OTP email (host=%s, port=%s, user=%s): %s",
+            smtp_host,
+            smtp_port,
+            smtp_user,
+            e,
+        )
         return False
-

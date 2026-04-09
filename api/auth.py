@@ -1,6 +1,5 @@
-import os
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import JSONResponse
 from sqlmodel import select, Session
 from pydantic import BaseModel, EmailStr
 from dotenv import load_dotenv
@@ -17,6 +16,8 @@ from auth_utils import (
 )
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
@@ -68,7 +69,15 @@ async def register(request: RegisterRequest, session: Session = Depends(get_db))
     session.commit()
     session.refresh(user)
 
-    await send_otp_email(request.email, otp)
+    sent = await send_otp_email(request.email, otp)
+    if not sent:
+        logger.error("OTP email failed during register for %s", request.email)
+        session.delete(user)
+        session.commit()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Unable to send verification email. Please try again later."
+        )
 
     return {"success": True, "message": "Registration successful. Please verify your email."}
 
@@ -120,7 +129,13 @@ async def resend_otp(request: ResendOtpRequest, session: Session = Depends(get_d
     session.add(user)
     session.commit()
 
-    await send_otp_email(user.email, otp)
+    sent = await send_otp_email(user.email, otp)
+    if not sent:
+        logger.error("OTP email failed during resend for %s", user.email)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Unable to send verification email. Please try again later."
+        )
 
     return {"success": True, "message": "New OTP sent to your email"}
 
@@ -146,7 +161,13 @@ async def login(request: LoginRequest, session: Session = Depends(get_db)):
         user.otp_code = otp
         session.add(user)
         session.commit()
-        await send_otp_email(user.email, otp)
+        sent = await send_otp_email(user.email, otp)
+        if not sent:
+            logger.error("OTP email failed during login for %s", user.email)
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Unable to send verification email. Please try again later.",
+            )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Account not verified. A new OTP has been sent to your email.",
@@ -185,7 +206,7 @@ async def get_current_user(session: Session = Depends(get_db), token: str = None
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="No token provided"
         )
-    
+
     from auth_utils import decode_token
     try:
         payload = decode_token(token)
@@ -195,14 +216,14 @@ async def get_current_user(session: Session = Depends(get_db), token: str = None
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token"
             )
-        
+
         user = session.exec(select(User).where(User.id == int(user_id))).first()
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found"
             )
-        
+
         return {
             "id": user.id,
             "name": user.name,
@@ -211,7 +232,7 @@ async def get_current_user(session: Session = Depends(get_db), token: str = None
             "accountNumber": user.account_number,
             "balance": user.balance,
         }
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token"
