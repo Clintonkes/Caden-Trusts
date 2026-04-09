@@ -7,8 +7,6 @@ from typing import Optional
 
 import jwt
 from passlib.context import CryptContext
-from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
-
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 logger = logging.getLogger(__name__)
@@ -89,55 +87,33 @@ def seed_admin() -> None:
 
 
 async def send_otp_email(email: str, otp: str) -> bool:
-    smtp_host = os.getenv("SMTP_HOST")
-    smtp_user = os.getenv("SMTP_USER")
-    smtp_password = os.getenv("SMTP_PASSWORD")
-    smtp_starttls = os.getenv("SMTP_STARTTLS", "true").strip().lower() in {"1", "true", "yes", "on"}
-    smtp_ssl_tls = os.getenv("SMTP_SSL_TLS", "false").strip().lower() in {"1", "true", "yes", "on"}
-    smtp_port_env = os.getenv("SMTP_PORT")
-    smtp_port = int(smtp_port_env) if smtp_port_env else (465 if smtp_ssl_tls else 587)
+    resend_api_key = os.getenv("RESEND_API_KEY")
+    resend_from_email = os.getenv("RESEND_FROM_EMAIL")
 
-    if not all([smtp_host, smtp_user, smtp_password]):
+    if not resend_api_key or not resend_from_email:
         logger.info("[DEV MODE] OTP for %s: %s", email, otp)
         return True
 
-    conf = ConnectionConfig(
-        MAIL_USERNAME=smtp_user,
-        MAIL_PASSWORD=smtp_password,
-        MAIL_FROM=smtp_user,
-        MAIL_PORT=smtp_port,
-        MAIL_SERVER=smtp_host,
-        MAIL_STARTTLS=smtp_starttls,
-        MAIL_SSL_TLS=smtp_ssl_tls,
-        USE_CREDENTIALS=True,
-    )
-
-    message = MessageSchema(
-        subject="Caden Trusts - Your Verification Code",
-        recipients=[email],
-        body=f"""
-        <html>
-        <body>
-            <h2>Caden Trusts - Email Verification</h2>
-            <p>Your verification code is: <strong>{otp}</strong></p>
-            <p>This code will expire in 10 minutes.</p>
-            <p>If you did not request this code, please ignore this email.</p>
-        </body>
-        </html>
-        """,
-        subtype="html",
-    )
-
     try:
-        fm = FastMail(conf)
-        await fm.send_message(message)
+        import resend
+
+        resend.api_key = resend_api_key
+        resend.Emails.send({
+            "from": resend_from_email,
+            "to": [email],
+            "subject": "Caden Trusts - Your Verification Code",
+            "html": f"""
+            <html>
+            <body>
+                <h2>Caden Trusts - Email Verification</h2>
+                <p>Your verification code is: <strong>{otp}</strong></p>
+                <p>This code will expire in 10 minutes.</p>
+                <p>If you did not request this code, please ignore this email.</p>
+            </body>
+            </html>
+            """,
+        })
         return True
     except Exception as e:
-        logger.exception(
-            "Failed to send OTP email (host=%s, port=%s, user=%s): %s",
-            smtp_host,
-            smtp_port,
-            smtp_user,
-            e,
-        )
+        logger.exception("Failed to send OTP email via Resend (from=%s): %s", resend_from_email, e)
         return False
