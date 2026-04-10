@@ -15,6 +15,7 @@ export default function OTPPage() {
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
     const [resendTimer, setResendTimer] = useState(60)
+    const [resending, setResending] = useState(false)
     const [email, setEmail] = useState('')
     const inputRefs = useRef<(HTMLInputElement | null)[]>([])
 
@@ -93,7 +94,8 @@ export default function OTPPage() {
     const handleResend = async () => {
         setResendTimer(60)
         setError('')
-        
+        setResending(true)
+
         try {
             await resendOtp(email)
             setSuccess('A new OTP has been sent to your email.')
@@ -103,6 +105,8 @@ export default function OTPPage() {
             } else {
                 setError('Failed to resend OTP. Please try again.')
             }
+        } finally {
+            setResending(false)
         }
     }
 
@@ -167,9 +171,10 @@ export default function OTPPage() {
                         ) : (
                             <button
                                 onClick={handleResend}
-                                className="text-primary font-medium hover:underline text-sm"
+                                className="text-primary font-medium hover:underline text-sm disabled:opacity-50"
+                                disabled={resending}
                             >
-                                Resend Verification Code
+                                {resending ? 'Resending OTP...' : 'Resend Verification Code'}
                             </button>
                         )}
                     </div>
@@ -177,6 +182,5 @@ export default function OTPPage() {
             </div>
         </div>
     </ScrollReveal>
-  )
+    )
 }
-
