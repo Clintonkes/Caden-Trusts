@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from api.auth import router as auth_router
@@ -31,8 +32,49 @@ def health_check():
     return {"status": "healthy"}
 
 
+def resolve_frontend_path(full_path: str) -> Path | None:
+    if not FRONTEND_DIR.exists():
+        return None
+
+    safe_root = FRONTEND_DIR.resolve()
+    candidate = (FRONTEND_DIR / full_path).resolve()
+
+    if safe_root not in candidate.parents and candidate != safe_root:
+        return None
+
+    if candidate.is_dir():
+        index_file = candidate / "index.html"
+        if index_file.exists():
+            return index_file
+
+    if candidate.is_file():
+        return candidate
+
+    html_candidate = candidate.with_suffix(".html")
+    if html_candidate.exists():
+        return html_candidate
+
+    return None
+
+
 if FRONTEND_DIR.exists():
-    app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
+    next_dir = FRONTEND_DIR / "_next"
+    if next_dir.exists():
+        app.mount("/_next", StaticFiles(directory=next_dir), name="next-assets")
+
+
+@app.get("/{full_path:path}")
+def serve_frontend(full_path: str):
+    full_path = full_path or "index.html"
+    file_path = resolve_frontend_path(full_path)
+    if file_path:
+        return FileResponse(file_path)
+
+    not_found = FRONTEND_DIR / "404.html"
+    if not_found.exists():
+        return FileResponse(not_found, status_code=404)
+
+    return Response("Not Found", status_code=404)
 
 
 if __name__ == "__main__":
