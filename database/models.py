@@ -12,6 +12,7 @@ class UserStatus(str, Enum):
     PENDING_VERIFICATION = "pending verification"
     OTP_VERIFIED = "OTP-verified"
     ACTIVE = "active"
+    LOGIN_OTP_REQUIRED = "login-otp-required"
 
 
 class User(SQLModel, table=True):

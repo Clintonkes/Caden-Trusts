@@ -25,8 +25,21 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
 
-    try {
+try {
       const response = await loginUser(email, password)
+
+      if (response.requiresOtp) {
+        sessionStorage.setItem('pendingEmail', email)
+        sessionStorage.setItem('otpMode', 'login')
+        addToast({
+          id: Date.now().toString(),
+          message: response.message || 'Authentication code sent to your email.',
+          type: 'info',
+        })
+        router.push('/otp')
+        setLoading(false)
+        return
+      }
 
       tokenManager.setToken(response.token!)
       tokenManager.setUser(response.user!)
@@ -198,3 +211,4 @@ export default function LoginPage() {
     </ScrollReveal>
   )
 }
+

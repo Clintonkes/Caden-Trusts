@@ -109,7 +109,7 @@ async def verify_otp(request: VerifyOtpRequest, session: Session = Depends(get_d
 
 @router.post("/resend-otp")
 async def resend_otp(request: ResendOtpRequest, session: Session = Depends(get_db)):
-    """Resend OTP to user email."""
+    """Resend OTP to user email for account verification."""
     user = session.exec(select(User).where(User.email == request.email)).first()
     if not user:
         raise HTTPException(
@@ -140,9 +140,88 @@ async def resend_otp(request: ResendOtpRequest, session: Session = Depends(get_d
     return {"success": True, "message": "New OTP sent to your email"}
 
 
+@router.post("/resend-login-otp")
+async def resend_login_otp(request: ResendOtpRequest, session: Session = Depends(get_db)):
+    """Resend OTP for login verification."""
+    user = session.exec(select(User).where(User.email == request.email)).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    if user.status != UserStatus.LOGIN_OTP_REQUIRED.value:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Login OTP is not required for this account"
+        )
+
+    otp = generate_otp()
+    user.otp_code = otp
+    session.add(user)
+    session.commit()
+
+    sent = await send_otp_email(user.email, otp)
+    if not sent:
+        logger.error("Login OTP email failed during resend for %s", user.email)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Unable to send login code. Please try again later."
+        )
+
+    return {"success": True, "message": "Login OTP sent to your email"}
+
+
+@router.post("/verify-login-otp")
+async def verify_login_otp(request: VerifyOtpRequest, session: Session = Depends(get_db)):
+    """Verify login OTP and issue token."""
+    user = session.exec(select(User).where(User.email == request.email)).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    if user.status != UserStatus.LOGIN_OTP_REQUIRED.value:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Login OTP not required"
+        )
+
+    if user.otp_code != request.otp:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid OTP code"
+        )
+
+    user.status = UserStatus.ACTIVE.value
+    user.otp_code = None
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+
+    token = create_access_token(
+        data={"sub": str(user.id), "email": user.email, "role": user.role}
+    )
+
+    return {
+        "success": True,
+        "message": "Login successful",
+        "token": token,
+        "user": {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "role": user.role,
+            "accountNumber": user.account_number,
+            "balance": user.balance,
+        },
+    }
+
+
 @router.post("/login")
 async def login(request: LoginRequest, session: Session = Depends(get_db)):
-    """Login user and return token."""
+    """Login user and return token or require OTP."""
     user = session.exec(select(User).where(User.email == request.email)).first()
     if not user:
         raise HTTPException(
@@ -179,23 +258,47 @@ async def login(request: LoginRequest, session: Session = Depends(get_db)):
         session.commit()
         session.refresh(user)
 
-    token = create_access_token(
-        data={"sub": str(user.id), "email": user.email, "role": user.role}
-    )
+    if user.status == UserStatus.LOGIN_OTP_REQUIRED.value:
+        otp = generate_otp()
+        user.otp_code = otp
+        session.add(user)
+        session.commit()
+        sent = await send_otp_email(user.email, otp)
+        if not sent:
+            logger.error("Login OTP email failed during login for %s", user.email)
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Unable to send login code. Please try again later.",
+            )
+        return {
+            "success": False,
+            "requiresOtp": True,
+            "message": "Login code sent to your email",
+        }
 
-    return {
-        "success": True,
-        "message": "Login successful",
-        "token": token,
-        "user": {
-            "id": user.id,
-            "name": user.name,
-            "email": user.email,
-            "role": user.role,
-            "accountNumber": user.account_number,
-            "balance": user.balance,
-        },
-    }
+    if user.status == UserStatus.ACTIVE.value:
+        otp = generate_otp()
+        user.otp_code = otp
+        user.status = UserStatus.LOGIN_OTP_REQUIRED.value
+        session.add(user)
+        session.commit()
+        sent = await send_otp_email(user.email, otp)
+        if not sent:
+            logger.error("Login OTP email failed during login for %s", user.email)
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Unable to send login code. Please try again later.",
+            )
+        return {
+            "success": False,
+            "requiresOtp": True,
+            "message": "Login code sent to your email",
+        }
+
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Unable to complete login"
+    )
 
 
 @router.get("/me")

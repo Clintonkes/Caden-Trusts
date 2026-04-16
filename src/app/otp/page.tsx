@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Shield, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { verifyOtp, ApiError, resendOtp } from '@/lib/token'
+import { verifyOtp, verifyLoginOtp, resendOtp, resendLoginOtp, ApiError } from '@/lib/token'
 
 export default function OTPPage() {
     const router = useRouter()
@@ -17,14 +17,20 @@ export default function OTPPage() {
     const [resendTimer, setResendTimer] = useState(60)
     const [resending, setResending] = useState(false)
     const [email, setEmail] = useState('')
+    const [mode, setMode] = useState<'verify' | 'login'>('verify')
     const inputRefs = useRef<(HTMLInputElement | null)[]>([])
 
     useEffect(() => {
         const pendingEmail = sessionStorage.getItem('pendingEmail')
+        const storedMode = sessionStorage.getItem('otpMode')
         if (pendingEmail) {
             setEmail(pendingEmail)
         } else {
             router.push('/signup')
+        }
+
+        if (storedMode === 'login') {
+            setMode('login')
         }
 
         const timer = setInterval(() => {
@@ -74,12 +80,23 @@ export default function OTPPage() {
         }
 
         try {
-            await verifyOtp(email, otpValue)
-            setSuccess('Email verified successfully! Redirecting to login...')
-            sessionStorage.removeItem('pendingEmail')
-            setTimeout(() => {
-                router.push('/login')
-            }, 1500)
+            if (mode === 'login') {
+                await verifyLoginOtp(email, otpValue)
+                setSuccess('Authentication successful! Redirecting to dashboard...')
+                sessionStorage.removeItem('pendingEmail')
+                sessionStorage.removeItem('otpMode')
+                setTimeout(() => {
+                    router.push('/dashboard')
+                }, 1200)
+            } else {
+                await verifyOtp(email, otpValue)
+                setSuccess('Email verified successfully! Redirecting to login...')
+                sessionStorage.removeItem('pendingEmail')
+                sessionStorage.removeItem('otpMode')
+                setTimeout(() => {
+                    router.push('/login')
+                }, 1500)
+            }
         } catch (err) {
             if (err instanceof ApiError) {
                 setError(err.detail)
@@ -97,13 +114,18 @@ export default function OTPPage() {
         setResending(true)
 
         try {
-            await resendOtp(email)
-            setSuccess('A new OTP has been sent to your email.')
+            if (mode === 'login') {
+                await resendLoginOtp(email)
+                setSuccess('A new login code has been sent to your email.')
+            } else {
+                await resendOtp(email)
+                setSuccess('A new OTP has been sent to your email.')
+            }
         } catch (err) {
             if (err instanceof ApiError) {
                 setError(err.detail)
             } else {
-                setError('Failed to resend OTP. Please try again.')
+                setError('Failed to resend code. Please try again.')
             }
         } finally {
             setResending(false)
@@ -124,9 +146,13 @@ export default function OTPPage() {
                         <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                             <Shield className="w-8 h-8 text-primary" />
                         </div>
-                        <h1 className="text-2xl font-bold text-gray-900 mb-2">Verify Your Account</h1>
+                        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                            {mode === 'login' ? 'Confirm Your Login' : 'Verify Your Account'}
+                        </h1>
                         <p className="text-gray-600">
-                            We&apos;ve sent a 6-digit code to <strong>{email}</strong>. Enter it below to verify your identity.
+                            {mode === 'login'
+                                ? 'Enter the authentication code sent to your email to finish logging in.'
+                                : `We\'ve sent a 6-digit code to ${email}. Enter it below to verify your identity.`}
                         </p>
                     </div>
 
@@ -159,7 +185,7 @@ export default function OTPPage() {
                         </div>
 
                         <Button type="submit" className="w-full" loading={loading}>
-                            Verify Account
+                            {mode === 'login' ? 'Verify Login' : 'Verify Account'}
                         </Button>
                     </form>
 
@@ -174,7 +200,7 @@ export default function OTPPage() {
                                 className="text-primary font-medium hover:underline text-sm disabled:opacity-50"
                                 disabled={resending}
                             >
-                                {resending ? 'Resending OTP...' : 'Resend Verification Code'}
+                                {resending ? 'Resending code...' : 'Resend Verification Code'}
                             </button>
                         )}
                     </div>

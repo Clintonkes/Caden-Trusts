@@ -22,6 +22,7 @@ export interface AuthResponse {
   message: string;
   token?: string;
   user?: User;
+  requiresOtp?: boolean;
 }
 
 class TokenManager {
@@ -127,8 +128,24 @@ export async function verifyOtp(email: string, otp: string): Promise<AuthRespons
   });
 }
 
+export async function verifyLoginOtp(email: string, otp: string): Promise<AuthResponse> {
+  return apiRequest('/api/auth/verify-login-otp', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, otp }),
+  });
+}
+
 export async function resendOtp(email: string): Promise<AuthResponse> {
   return apiRequest('/api/auth/resend-otp', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function resendLoginOtp(email: string): Promise<AuthResponse> {
+  return apiRequest('/api/auth/resend-login-otp', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email }),
@@ -158,3 +175,4 @@ export class ApiError extends Error {
     this.name = 'ApiError';
   }
 }
+
